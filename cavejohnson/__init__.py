@@ -143,10 +143,9 @@ class HockeyAppMandatoryType(enum.Enum):
 
 def upload_hockeyapp(token, appid, notification=None, status=None, mandatory=None, tags=None):
     import requests
-    ipa_path = os.environ["XCS_PRODUCT"]
+    ipa_path = os.path.join(os.environ["XCS_OUTPUT_DIR"], os.environ["XCS_PRODUCT"])
     if not os.path.exists(ipa_path):
-        print(subprocess.check_output("find / -name '*.ipa'", shell=True).decode("utf-8"))
-        raise Exception("Can't find %s.  Maybe try a path above?" % ipa_path)
+        raise Exception("Can't find %s." % ipa_path)
     dsym_path = "/tmp/cavejohnson.dSYM.zip"
     subprocess.check_output("cd %s && zip -r %s dSYMs" % (os.environ["XCS_ARCHIVE"], dsym_path), shell=True)
     if not os.path.exists(dsym_path):
