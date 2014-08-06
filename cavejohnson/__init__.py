@@ -7,7 +7,7 @@ import sys
 __version__ = "0.1.0"
 
 CREDENTIALS_FILE = "/var/_xcsbuildd/githubcredentials"
-CREDENTIALS_FILE = "/tmp/removeme"
+#CREDENTIALS_FILE = "/tmp/removeme"
 
 
 def set_github_status(repo, sha):
