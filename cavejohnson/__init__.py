@@ -243,8 +243,8 @@ def main_func():
     parser_hockeyapp.add_argument("--app-id", required=True, help="Hockeyapp app ID")
     parser_hockeyapp.add_argument("--notification-settings", choices=["dont_notify", "notify_testers_who_can_install", "notify_all_testers"], default=None)
     parser_hockeyapp.add_argument("--availability-settings", choices=["dont_allow_to_download_or_install", "allow_to_download_or_install"], default=None)
-    parser_hockeyapp.add_argument("--mandatory", action='store_true', default=False)
-    parser_hockeyapp.add_argument("--restrict-to-tag", action='append', default=None)
+    parser_hockeyapp.add_argument("--mandatory", action='store_true', default=False, help="Makes the build mandatory (users must install)")
+    parser_hockeyapp.add_argument("--restrict-to-tag", action='append', default=None, help="Restricts the build's availibility to users with certain tags")
     parser_hockeyapp.set_defaults(func=uploadHockeyApp)
 
     args = parser.parse_args()
