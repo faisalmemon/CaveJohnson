@@ -4,6 +4,14 @@ CaveJohnson is a program to teach XCode6 CI new tricks.
 
 Report status to GitHub inside trigger
 
+First configure GitHub credentials
+
+```bash
+sudo -u _xcsbuildd cavejohnson setGithubCredentials
+```
+
+Now from inside trigger we can do
+
 ```bash
 cavejohnson setGithubStatus
 ```
