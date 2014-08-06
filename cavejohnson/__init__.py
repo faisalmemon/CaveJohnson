@@ -145,7 +145,7 @@ def upload_hockeyapp(token, appid, notification=None, status=None, mandatory=Non
     import requests
     ipa_path = os.environ["XCS_PRODUCT"]
     if not os.path.exists(ipa_path):
-        print(subprocess.check_output("find . -name '*.ipa'", shell=True).decode("utf-8"))
+        print(subprocess.check_output("find / -name '*.ipa'", shell=True).decode("utf-8"))
         raise Exception("Can't find %s.  Maybe try a path above?" % ipa_path)
     dsym_path = "/tmp/cavejohnson.dSYM.zip"
     subprocess.check_output("cd %s && zip -r %s dSYMs" % (os.environ["XCS_ARCHIVE"], dsym_path), shell=True)
