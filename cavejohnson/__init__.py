@@ -10,7 +10,7 @@ CREDENTIALS_FILE = "/var/_xcsbuildd/githubcredentials"
 
 
 def set_github_status(repo, sha):
-    (ident, token) = github_auth()
+    token = github_auth()
     import github3
     gh = github3.login(token=token)
     (owner, reponame) = repo.split("/")
@@ -32,10 +32,10 @@ def set_github_status(repo, sha):
 
 
 def github_auth():
-    import keyring
-    if keyring.get_password("cavejohnson", "github"):
-        (ident, token) = keyring.get_password("cavejohnson", "github").split("::")
-        return (int(ident), token)
+    if os.path.exists(CREDENTIALS_FILE):
+        with open(CREDENTIALS_FILE) as f:
+            token = f.read().strip()
+            return token
 
     from github3 import authorize
     from getpass import getpass
@@ -50,8 +50,10 @@ def github_auth():
     scopes = ['repo:status']
     auth = authorize(user, password, scopes, note, note_url)
 
-    keyring.set_password("cavejohnson", "github", str(auth.id) + "::" + auth.token)
-    return (auth.id, auth.token)
+    with open(CREDENTIALS_FILE, "w") as f:
+        f.write(auth.token)
+
+    return auth.token
 
 
 # rdar://17923022
