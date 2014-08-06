@@ -104,7 +104,7 @@ def getSha(args):
 
 def setGithubCredentials(args):
     import subprocess
-    whoami = subprocess.check_output(["whoami"]).strip()
+    whoami = subprocess.check_output(["whoami"]).strip().encode("utf-8")
     if whoami != "_xcsbuildd":
         print("%s is not _xcsbuildd" % whoami)
         print("Sorry, you need to call like 'sudo -u _xcsbuildd cavejohnson setGithubCredentials'")
