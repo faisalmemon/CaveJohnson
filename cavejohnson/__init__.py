@@ -7,6 +7,7 @@ import sys
 __version__ = "0.1.0"
 
 CREDENTIALS_FILE = "/var/_xcsbuildd/githubcredentials"
+CREDENTIALS_FILE = "/tmp/removeme"
 
 
 def set_github_status(repo, sha):
@@ -15,6 +16,9 @@ def set_github_status(repo, sha):
     gh = github3.login(token=token)
     (owner, reponame) = repo.split("/")
     r = gh.repository(owner, reponame)
+    if not r:
+        raise Exception("Trouble getting a repository for %s and %s" % (owner, reponame))
+
     # these constants are documented on http://faq.sealedabstract.com/xcodeCI/
     xcs_status = os.environ["XCS_INTEGRATION_RESULT"]
     if xcs_status == "unknown":
@@ -107,10 +111,10 @@ def getSha(args):
 def setGithubCredentials(args):
     import subprocess
     whoami = subprocess.check_output(["whoami"]).strip().decode("utf-8")
-    if whoami != "_xcsbuildd":
-        print("%s is not _xcsbuildd" % whoami)
-        print("Sorry, you need to call like 'sudo -u _xcsbuildd cavejohnson setGithubCredentials'")
-        sys.exit(1)
+    # if whoami != "_xcsbuildd":
+    #     print("%s is not _xcsbuildd" % whoami)
+    #     print("Sorry, you need to call like 'sudo -u _xcsbuildd cavejohnson setGithubCredentials'")
+    #     sys.exit(1)
     github_auth()
 
 
