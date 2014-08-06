@@ -173,7 +173,7 @@ def upload_hockeyapp(token, appid, notification=None, status=None, mandatory=Non
             if tags:
                 data["tags"] = tags
 
-            r = requests.post("https://rink.hockeyapp.net/api/2/apps/%s/app_versions/upload" % appid, data=data, files=files, headers={"X-HockeyAppToken", token})
+            r = requests.post("https://rink.hockeyapp.net/api/2/apps/%s/app_versions/upload" % appid, data=data, files=files, headers={"X-HockeyAppToken": token})
             assert r.status_code == 200
 
 
