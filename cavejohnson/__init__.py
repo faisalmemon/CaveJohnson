@@ -91,7 +91,7 @@ def get_repo():
 
 
 def get_integration_url():
-    return "https://" + subprocess.check_output(["hostname"]) + "/xcode/bots/" + os.environ["XCS_BOT_TINY_ID"] + "/integrations"
+    return "https://" + subprocess.check_output(["hostname"]) + "/xcode/bots/" + os.environ["XCS_BOT_TINY_ID"].decode("utf-8") + "/integrations"
 
 
 def get_botname():
