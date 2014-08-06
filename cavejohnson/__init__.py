@@ -2,6 +2,7 @@
 import os
 import os.path
 import re
+import sys
 
 __version__ = "0.1.0"
 
@@ -86,3 +87,34 @@ def get_integration_url():
 
 def get_botname():
     return os.environ["XCS_BOT_NAME"]
+    #!python3
+
+
+def setGithubStatus(args):
+    set_github_status(get_repo(), get_sha())
+
+
+def getGithubRepo(args):
+    print(get_repo())
+
+
+def getSha(args):
+    print(get_sha())
+
+
+def main_func():
+    import argparse
+    parser = argparse.ArgumentParser(prog='CaveJohnson')
+    subparsers = parser.add_subparsers(help='sub-command help')
+    # create the parser for the "setGithubStatus" command
+    parser_ghstatus = subparsers.add_parser('setGithubStatus', help='Sets the GitHub status to an appropriate value inside a trigger.  Best to run both before and after build.')
+    parser_ghstatus.set_defaults(func=setGithubStatus)
+
+    parser_ghrepo = subparsers.add_parser('getGithubRepo', help='Detects the GitHub repo inside a trigger.')
+    parser_ghrepo.set_defaults(func=getGithubRepo)
+
+    parser_getsha = subparsers.add_parser('getSha', help="Detects the git sha of what is being integrated")
+    parser_getsha.set_defaults(func=getSha)
+
+    args = parser.parse_args()
+    args.func(args)

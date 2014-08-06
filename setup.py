@@ -1,11 +1,14 @@
 #!python3
 from setuptools import setup, find_packages
-
-import caffeine  # detect caffeine's version
+import cavejohnson  # detect cj version
 setup(
     name="cavejohnson",
-    version=caffeine.__version__,
+    version=cavejohnson.__version__,
     packages=find_packages(),
-    install_requires=["github3.py","keyring"],
-    scripts=[],
+    install_requires=["github3.py", "keyring"],
+    entry_points={
+        'console_scripts': [
+            'cavejohnson = cavejohnson:main_func',
+        ],
+    }
 )
