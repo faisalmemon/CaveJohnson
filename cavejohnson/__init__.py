@@ -3,6 +3,7 @@ import os
 import os.path
 import re
 import sys
+import subprocess
 
 __version__ = "0.1.0"
 
@@ -90,7 +91,7 @@ def get_repo():
 
 
 def get_integration_url():
-    return "https://" + os.system("hostname") + "/xcode/bots/" + os.environ["XCS_BOT_TINY_ID"] + "/integrations"
+    return "https://" + subprocess.check_output(["hostname"]) + "/xcode/bots/" + os.environ["XCS_BOT_TINY_ID"] + "/integrations"
 
 
 def get_botname():
@@ -111,12 +112,11 @@ def getSha(args):
 
 
 def setGithubCredentials(args):
-    import subprocess
     whoami = subprocess.check_output(["whoami"]).strip().decode("utf-8")
-    # if whoami != "_xcsbuildd":
-    #     print("%s is not _xcsbuildd" % whoami)
-    #     print("Sorry, you need to call like 'sudo -u _xcsbuildd cavejohnson setGithubCredentials'")
-    #     sys.exit(1)
+    if whoami != "_xcsbuildd":
+        print("%s is not _xcsbuildd" % whoami)
+        print("Sorry, you need to call like 'sudo -u _xcsbuildd cavejohnson setGithubCredentials'")
+        sys.exit(1)
     github_auth()
 
 
