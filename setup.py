@@ -5,7 +5,7 @@ setup(
     name="cavejohnson",
     version=cavejohnson.__version__,
     packages=find_packages(),
-    install_requires=["github3.py"],
+    install_requires=["github3.py", "requests"],
     entry_points={
         'console_scripts': [
             'cavejohnson = cavejohnson:main_func',

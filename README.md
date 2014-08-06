@@ -21,7 +21,7 @@ Figure out what SHA or repo is being integrated
 ```bash
 $ cavejohnson getGithubRepo
 drewcrawford/DCAKit
-cavejohnson getSha
+$ cavejohnson getSha
 25ab291bf606f8ed9b5eb612553329b622882e15
 ```
 

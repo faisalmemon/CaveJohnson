@@ -4,6 +4,7 @@ import os.path
 import re
 import sys
 import subprocess
+import enum
 
 __version__ = "0.1.0"
 
@@ -118,7 +119,54 @@ def get_integration_url():
 
 def get_botname():
     return os.environ["XCS_BOT_NAME"]
-    #!python3
+
+
+def get_commit_log():
+    return subprocess.check_output('cd {SOURCE_DIRECTORY} && git log -n 1 --pretty="%s %B"'.format(SOURCE_DIRECTORY=os.environ["XCS_SOURCE_DIR"]), shell=True).decode('utf-8')
+
+
+class HockeyAppNotificationType(enum.Enum):
+    dont_notify = 0
+    notify_testers_who_can_install = 1
+    notify_all_testers = 2
+
+
+class HockeyAppStatusType(enum.Enum):
+    dont_allow_to_download_or_install = 0
+    allow_to_download_or_install = 1
+
+
+class HockeyAppMandatoryType(enum.Enum):
+    not_mandatory = 0
+    mandatory = 1
+
+
+def upload_hockeyapp(token, appid, notification=None, status=None, mandatory=None, tags=None):
+    import requests
+    ipa_path = os.environ["XCS_PRODUCT"]
+    if not os.path.exists(ipa_path):
+        raise Exception("Can't find %s" % ipa_path)
+    dsym_path = "/tmp/cavejohnson.dSYM.zip"
+    subprocess.check_output("cd %s && zip -r %s dSYMs" % (os.environ["XCS_ARCHIVE"], dsym_path), shell=True)
+    if not os.path.exists(dsym_path):
+        raise Exception("Error processing dsym %s" % dsym_path)
+
+    with open(dsym_path, "rb") as dsym:
+        with open(ipa_path, "rb") as ipa:
+            files = {"ipa": ipa, "dsym": dsym}
+            data = {"notes": get_commit_log(), "notes_type": "1", "commit_sha": get_sha(), "build_server_url": get_integration_url()}
+
+            if notification:
+                data["notify"] = notification.value
+            if status:
+                data["status"] = status.value
+            if mandatory:
+                data["mandatory"] = status.value
+            if tags:
+                data["tags"] = tags
+
+            r = requests.post("https://rink.hockeyapp.net/api/2/apps/%s/app_versions/upload" % appid, data=data, files=files, headers={"X-HockeyAppToken", token})
+            assert r.status_code == 200
 
 
 def setGithubStatus(args):
@@ -146,6 +194,29 @@ def setBuildNumber(args):
     set_build_number(args.plist_path)
 
 
+def uploadHockeyApp(args):
+    notify = None
+    if args.notification_settings == "dont_notify":
+        notify = HockeyAppNotificationType.dont_notify
+    elif args.notification_settings == "notify_testers_who_can_install":
+        notify = HockeyAppNotificationType.notify_testers_who_can_install
+    elif args.notification_settings == "notify_all_testers":
+        notify = HockeyAppNotificationType.notify_all_testers
+
+    availability = None
+    if args.availability_settings == "dont_allow_to_download_or_install":
+        availability = HockeyAppStatusType.dont_allow_to_download_or_install
+    elif args.availability_settings == "allow_to_download_or_install":
+        availability = HockeyAppStatusType.allow_to_download_or_install
+
+    if args.mandatory:
+        mandatory = HockeyAppMandatoryType.mandatory
+    else:
+        mandatory = HockeyAppMandatoryType.not_mandatory
+
+    upload_hockeyapp(args.token, args.app_id, notification=notify, status=availability, mandatory=mandatory, tags=args.restrict_to_tag)
+
+
 def main_func():
     import argparse
     parser = argparse.ArgumentParser(prog='CaveJohnson')
@@ -166,6 +237,15 @@ def main_func():
     parser_buildnumber = subparsers.add_parser('setBuildNumber', help="Sets the build number (CFBundleVersion) based on the bot integration count to building")
     parser_buildnumber.add_argument('--plist-path', help="path for the plist to edit", required=True)
     parser_buildnumber.set_defaults(func=setBuildNumber)
+
+    parser_hockeyapp = subparsers.add_parser('uploadHockeyApp', help="Uploads an app to HockeyApp")
+    parser_hockeyapp.add_argument("--token", required=True, help="Hockeyapp token")
+    parser_hockeyapp.add_argument("--app-id", required=True, help="Hockeyapp app ID")
+    parser_hockeyapp.add_argument("--notification-settings", choices=["dont_notify", "notify_testers_who_can_install", "notify_all_testers"], default=None)
+    parser_hockeyapp.add_argument("--availability-settings", choices=["dont_allow_to_download_or_install", "allow_to_download_or_install"], default=None)
+    parser_hockeyapp.add_argument("--mandatory", action='store_true', default=False)
+    parser_hockeyapp.add_argument("--restrict-to-tag", action='append', default=None)
+    parser_hockeyapp.set_defaults(func=uploadHockeyApp)
 
     args = parser.parse_args()
     args.func(args)
