@@ -102,6 +102,13 @@ def getSha(args):
     print(get_sha())
 
 
+def setGithubCredentials(args):
+    if os.system("whoami") != "_xcsbuildd":
+        print("Sorry, you need to su as _xcsbuildd to authenticate.")
+        sys.exit(1)
+    github_auth()
+
+
 def main_func():
     import argparse
     parser = argparse.ArgumentParser(prog='CaveJohnson')
@@ -115,6 +122,10 @@ def main_func():
 
     parser_getsha = subparsers.add_parser('getSha', help="Detects the git sha of what is being integrated")
     parser_getsha.set_defaults(func=getSha)
+
+    parser_authenticate = subparsers.add_parser('setGithubCredentials',help="Sets the credentials that will be used to talk to GitHub.")
+    parser_authenticate.set_defaults(func=setGithubCredentials)
+    
 
     args = parser.parse_args()
     args.func(args)
