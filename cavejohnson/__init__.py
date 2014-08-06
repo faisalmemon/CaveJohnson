@@ -169,7 +169,7 @@ def upload_hockeyapp(token, appid, notification=None, status=None, mandatory=Non
             if status:
                 data["status"] = status.value
             if mandatory:
-                data["mandatory"] = status.value
+                data["mandatory"] = mandatory.value
             if tags:
                 data["tags"] = tags
 
