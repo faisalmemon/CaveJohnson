@@ -122,7 +122,16 @@ def get_botname():
 
 
 def get_commit_log():
-    return subprocess.check_output('cd {SOURCE_DIRECTORY} && git log -n 1 --pretty="%s %B"'.format(SOURCE_DIRECTORY=os.environ["XCS_SOURCE_DIR"]), shell=True).decode('utf-8')
+    token = github_auth()
+    import github3
+    gh = github3.login(token=token)
+    (owner, reponame) = get_repo().split("/")
+    r = gh.repository(owner, reponame)
+    if not r:
+        raise Exception("Trouble getting a repository for %s and %s" % (owner, reponame))
+    commit = r.git_commit(get_sha())
+    import json
+    return json.loads(commit.to_json())["message"]
 
 
 class HockeyAppNotificationType(enum.Enum):
