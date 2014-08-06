@@ -19,9 +19,19 @@ cavejohnson setGithubStatus
 Figure out what SHA or repo is being integrated
 
 ```bash
-cavejohnson getGithubRepo
+$ cavejohnson getGithubRepo
+drewcrawford/DCAKit
 cavejohnson getSha
+25ab291bf606f8ed9b5eb612553329b622882e15
 ```
+
+Set minor build number (CFBundleVersion) to XCS integration id
+
+```bash
+cavejohnson setBuildNumber --plist-path ./path/to/Info.plist
+```
+
+
 
 
 #install

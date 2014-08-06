@@ -90,8 +90,30 @@ def get_repo():
     assert False
 
 
+def set_build_number(plistpath):
+    if not os.path.exists(plistpath):
+        output = subprocess.check_output(["find", ".", "-name", "*.plist"]).decode('utf-8')
+        print(output)
+        raise Exception("No such plist exists.  Try one of the strings shown in the log.")
+
+    import plistlib
+    with open(plistpath, "rb") as f:
+        data = plistlib.load(f)
+    # see xcdoc://?url=developer.apple.com/library/etc/redirect/xcode/ios/602958/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
+    # but basically this is the only valid format
+    # unofficially, however, sometimes a buildno is omitted.
+    import re
+    match = re.match("(\d+)\.?(\d*)\.?(\d*)", data["CFBundleVersion"])
+    if not match:
+        raise Exception("Can't figure out CFBundleVersion.  Please file a bug at http://github.com/drewcrawford/cavejohnson and include the string %s" % data["CFBundleVersion"])
+    (major, minor, build) = match.groups()
+    data["CFBundleVersion"] = "%s.%s.%s" % (major, minor, os.environ["XCS_INTEGRATION_NUMBER"])
+    with open(plistpath, "wb") as f:
+        plistlib.dump(data, f)
+
+
 def get_integration_url():
-    return "https://" + subprocess.check_output(["hostname"]).decode('utf-8') + "/xcode/bots/" + os.environ["XCS_BOT_TINY_ID"] + "/integrations"
+    return "https://" + subprocess.check_output(["hostname"]).decode('utf-8').strip() + "/xcode/bots/" + os.environ["XCS_BOT_TINY_ID"] + "/integrations"
 
 
 def get_botname():
@@ -120,6 +142,10 @@ def setGithubCredentials(args):
     github_auth()
 
 
+def setBuildNumber(args):
+    set_build_number(args.plist_path)
+
+
 def main_func():
     import argparse
     parser = argparse.ArgumentParser(prog='CaveJohnson')
@@ -136,6 +162,10 @@ def main_func():
 
     parser_authenticate = subparsers.add_parser('setGithubCredentials', help="Sets the credentials that will be used to talk to GitHub.")
     parser_authenticate.set_defaults(func=setGithubCredentials)
+
+    parser_buildnumber = subparsers.add_parser('setBuildNumber', help="Sets the build number (CFBundleVersion) based on the bot integration count to building")
+    parser_buildnumber.add_argument('--plist-path', help="path for the plist to edit", required=True)
+    parser_buildnumber.set_defaults(func=setBuildNumber)
 
     args = parser.parse_args()
     args.func(args)
