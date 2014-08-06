@@ -175,7 +175,7 @@ def upload_hockeyapp(token, appid, notification=None, status=None, mandatory=Non
 
             r = requests.post("https://rink.hockeyapp.net/api/2/apps/%s/app_versions/upload" % appid, data=data, files=files, headers={"X-HockeyAppToken": token})
             if r.status_code != 200:
-                print(r.response)
+                print(r.text)
                 raise Exception("Hockeyapp returned error code %d" % r.status_code)
 
 
