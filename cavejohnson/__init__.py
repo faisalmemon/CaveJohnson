@@ -83,7 +83,8 @@ def get_repo():
         assert XcodeFunkyRepo[:11] == "github.com:"
         XcodeFunkyRepo = XcodeFunkyRepo[11:]
         XcodeFunkyRepo = XcodeFunkyRepo.replace("\/", "/")
-        return XcodeFunkyRepo
+        assert XcodeFunkyRepo[-4:] == ".git"
+        XcodeFunkyRepo = XcodeFunkyRepo[:-4]
     assert False
 
 
