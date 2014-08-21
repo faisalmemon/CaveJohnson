@@ -36,7 +36,7 @@ cavejohnson setBuildNumber --plist-path ./path/to/Info.plist
 Upload to HockeyApp
 
 ```bash
-cavejohnson uploadHockeyApp --token [token] --app-id [app id] --notification-settings dont_notify
+cavejohnson uploadHockeyApp --token [token] --app-id [app id] --notification-settings dont_notify --resign-with-profile 'My provisioning profile name'
 ```
 
 
