@@ -11,7 +11,6 @@ __version__ = "0.1.0"
 CREDENTIALS_FILE = "/var/_xcsbuildd/githubcredentials"
 #CREDENTIALS_FILE = "/tmp/removeme"
 
-
 def set_github_status(repo, sha):
     token = github_auth()
     import github3
@@ -53,7 +52,7 @@ def github_auth():
         password = getpass('Password for {0}: '.format(user))
     note = 'cavejohnson, teaching Xcode 6 CI new tricks'
     note_url = 'http://sealedabstract.com'
-    scopes = ['repo:status']
+    scopes = ['repo:status','read:org']
     auth = authorize(user, password, scopes, note, note_url)
 
     with open(CREDENTIALS_FILE, "w") as f:
@@ -128,6 +127,7 @@ def get_commit_log():
     (owner, reponame) = get_repo().split("/")
     r = gh.repository(owner, reponame)
     if not r:
+        
         raise Exception("Trouble getting a repository for %s and %s" % (owner, reponame))
     commit = r.git_commit(get_sha())
     return commit.to_json()["message"]
