@@ -166,7 +166,8 @@ def upload_hockeyapp(token, appid, notification=None, status=None, mandatory=Non
     f.write("".join(data))
     f.close()
 
-    subprocess.check_output(["xcodebuild", "-exportArchive", "-exportFormat", "IPA", "-archivePath", os.environ["XCS_ARCHIVE"], "-exportPath", new_ipa_path, "-exportProvisioningProfile", profile])
+    output = subprocess.check_output(["xcodebuild", "-exportArchive", "-exportFormat", "IPA", "-archivePath", os.environ["XCS_ARCHIVE"], "-exportPath", new_ipa_path, "-exportProvisioningProfile", profile])
+    print(output)
     with open(dsym_path, "rb") as dsym:
         with open(new_ipa_path, "rb") as ipa:
             files = {"ipa": ipa, "dsym": dsym}
