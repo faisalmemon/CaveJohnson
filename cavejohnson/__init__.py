@@ -9,7 +9,7 @@ import enum
 __version__ = "0.1.0"
 
 CREDENTIALS_FILE = "/var/_xcsbuildd/githubcredentials"
-#CREDENTIALS_FILE = "/tmp/removeme"
+# CREDENTIALS_FILE = "/tmp/removeme"
 
 
 def set_github_status(repo, sha):
@@ -150,18 +150,21 @@ class HockeyAppMandatoryType(enum.Enum):
     mandatory = 1
 
 
-def upload_hockeyapp(token, appid, notification=None, status=None, mandatory=None, tags=None):
+def upload_hockeyapp(token, appid, notification=None, status=None, mandatory=None, tags=None, profile=None):
     import requests
-    ipa_path = os.path.join(os.environ["XCS_OUTPUT_DIR"], os.environ["XCS_PRODUCT"])
-    if not os.path.exists(ipa_path):
-        raise Exception("Can't find %s." % ipa_path)
+    old_ipa_path = os.path.join(os.environ["XCS_OUTPUT_DIR"], os.environ["XCS_PRODUCT"])
+    if not os.path.exists(old_ipa_path):
+        raise Exception("Can't find %s." % old_ipa_path)
     dsym_path = "/tmp/cavejohnson.dSYM.zip"
     subprocess.check_output("cd %s && zip -r %s dSYMs" % (os.environ["XCS_ARCHIVE"], dsym_path), shell=True)
     if not os.path.exists(dsym_path):
         raise Exception("Error processing dsym %s" % dsym_path)
+    # resign IPA
+    new_ipa_path = os.path.join(os.environ["XCS_OUTPUT_DIR"], "resigned.ipa")
+    subprocess.check_output("xcodebuild -exportArchive -exportFormat IPA -archivePath '{IPA_PATH}' -exportPath '{NEW_IPA_PATH}' -exportProvisioningProfile '{NEW_PROFILE}'".format(IPA_PATH=old_ipa_path, NEW_IPA_PATH=new_ipa_path, NEW_PROFILE=profile)
 
     with open(dsym_path, "rb") as dsym:
-        with open(ipa_path, "rb") as ipa:
+        with open(new_ipa_path, "rb") as ipa:
             files = {"ipa": ipa, "dsym": dsym}
             data = {"notes": get_commit_log(), "notes_type": "1", "commit_sha": get_sha(), "build_server_url": get_integration_url()}
 
@@ -225,7 +228,7 @@ def uploadHockeyApp(args):
     else:
         mandatory = HockeyAppMandatoryType.not_mandatory
 
-    upload_hockeyapp(args.token, args.app_id, notification=notify, status=availability, mandatory=mandatory, tags=args.restrict_to_tag)
+    upload_hockeyapp(args.token, args.app_id, notification=notify, status=availability, mandatory=mandatory, tags=args.restrict_to_tag, profile=args.resign_with_profile)
 
 
 def main_func():
@@ -256,6 +259,7 @@ def main_func():
     parser_hockeyapp.add_argument("--availability-settings", choices=["dont_allow_to_download_or_install", "allow_to_download_or_install"], default=None)
     parser_hockeyapp.add_argument("--mandatory", action='store_true', default=False, help="Makes the build mandatory (users must install)")
     parser_hockeyapp.add_argument("--restrict-to-tag", action='append', default=None, help="Restricts the build's availibility to users with certain tags")
+    parser_hockeyapp.add_argument("--resign-with-profile", default=None, help="Resign the archive with the specified provisioning profile name.")
     parser_hockeyapp.set_defaults(func=uploadHockeyApp)
 
     args = parser.parse_args()
