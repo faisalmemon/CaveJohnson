@@ -161,7 +161,7 @@ def upload_hockeyapp(token, appid, notification=None, status=None, mandatory=Non
         raise Exception("Error processing dsym %s" % dsym_path)
     # resign IPA
     new_ipa_path = os.path.join(os.environ["XCS_OUTPUT_DIR"], "resigned.ipa")
-    subprocess.check_output("xcodebuild -exportArchive -exportFormat IPA -archivePath '{ARCHIVE_PATH}' -exportPath '{NEW_IPA_PATH}' -exportProvisioningProfile '{NEW_PROFILE}'".format(ARCHIVE_PATH=os.environ["XCS_ARCHIVE"], NEW_IPA_PATH=new_ipa_path, NEW_PROFILE=profile), shell=True)
+    subprocess.check_output(["xcodebuild", "-exportArchive", "-exportFormat", "IPA", "-archivePath", os.environ["XCS_ARCHIVE"], "-exportPath", new_ipa_path, "-exportProvisioningProfile", profile])
     with open(dsym_path, "rb") as dsym:
         with open(new_ipa_path, "rb") as ipa:
             files = {"ipa": ipa, "dsym": dsym}
