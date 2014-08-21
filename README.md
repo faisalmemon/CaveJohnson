@@ -13,6 +13,8 @@ sudo -u _xcsbuildd cavejohnson setGithubCredentials
 Now from inside trigger we can do
 
 ```bash
+#!/bin/bash
+PATH=/Library/Frameworks/Python.framework/Versions/3.4/bin:$PATH
 cavejohnson setGithubStatus
 ```
 
@@ -29,6 +31,12 @@ Set minor build number (CFBundleVersion) to XCS integration id
 
 ```bash
 cavejohnson setBuildNumber --plist-path ./path/to/Info.plist
+```
+
+Upload to HockeyApp
+
+```bash
+cavejohnson uploadHockeyApp --token [token] --app-id [app id] --notification-settings dont_notify
 ```
 
 
