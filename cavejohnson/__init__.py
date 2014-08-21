@@ -29,8 +29,8 @@ def set_github_status(repo, sha):
         gh_state = "error"
     elif xcs_status == "test-failures" or xcs_status == "warnings" or xcs_status == "analyzer-warnings" or xcs_status == "test-failures":
         gh_state = "failure"
-    elif xcs_status == "success":
-        gh_state = "success"
+    elif xcs_status == "succeeded":
+        gh_state = "succeeded"
     else:
         raise Exception("Unknown xcs_status %s.  Please file a bug at http://github.com/drewcrawford/cavejohnson" % xcs_status)
 
