@@ -9,7 +9,81 @@ import enum
 __version__ = "0.1.0"
 
 CREDENTIALS_FILE = "/var/_xcsbuildd/githubcredentials"
-# CREDENTIALS_FILE = "/tmp/removeme"
+
+
+def uploadITMS(args):
+    upload_itunesconnect(args.itunes_app_id, args.itunes_username, args.itunes_password, args.ipa_path)
+
+
+def upload_itunesconnect(itunes_app_id, itunes_username, itunes_password, ipa_path=None):
+    if not ipa_path:
+        ipa_path = os.environ["XCS_OUTPUT_DIR"] + "/" + os.environ["XCS_PRODUCT"]
+
+    # we have to read the plist inside the IPA
+    import zipfile
+    zip_file = zipfile.ZipFile(ipa_path)
+    import re
+    # search for info plist inside IPA
+    info_plists = list(filter(lambda x: re.match("Payload/[^/]*/Info.plist", x), zip_file.namelist()))
+    assert len(info_plists) == 1
+
+    with zip_file.open(info_plists[0]) as plistfile:
+        # some hackery to read into RAM because zip_file doesn't support 'seek' as plistlib requires
+        plistdata = plistfile.read()
+
+    import plistlib
+    data = plistlib.loads(plistdata)
+
+    # first, we compute a path to the IPA
+    # now we get a temp path to work in
+    new_ipa_basename = "payload.ipa"
+    import tempfile
+    tpath = tempfile.mkdtemp()
+    print("Working in path", tpath)
+    packagepath = tpath + "/package.itmsp"
+    new_ipa_path = packagepath + "/" + new_ipa_basename
+    os.mkdir(packagepath)
+
+    # copy the IPA to our temp path
+    import shutil
+    shutil.copyfile(ipa_path, new_ipa_path)
+
+    # compute MD5
+    import hashlib
+    md5 = hashlib.md5()
+    with open(new_ipa_path, 'rb') as f:
+        for chunk in iter(lambda: f.read(8192), b''):
+            md5.update(chunk)
+    checksum = md5.hexdigest()
+
+    # calculate filesize
+    filesize = os.path.getsize(new_ipa_path)
+
+    # Ok, here we go
+
+    metadata_xml = """<?xml version="1.0" encoding="UTF-8"?>
+<package version="software5.2" xmlns="http://apple.com/itunes/importer">
+    <software_assets apple_id="{APP_ID}"
+        bundle_short_version_string="{SHORT_VERSION_STRING}"
+        bundle_version="{BUNDLE_VERSION}"
+        bundle_identifier="{BUNDLE_IDENTIFIER}">
+        <asset type="bundle">
+            <data_file>
+                <file_name>{IPA_NAME}</file_name>
+                <checksum type="md5">{MD5}</checksum>
+                <size>{FILESIZE}</size>
+            </data_file>
+        </asset>
+    </software_assets>
+</package>""".format(APP_ID=itunes_app_id, SHORT_VERSION_STRING=data["CFBundleShortVersionString"], BUNDLE_VERSION=data["CFBundleVersion"],
+                     BUNDLE_IDENTIFIER=data["CFBundleIdentifier"], IPA_NAME=new_ipa_basename, MD5=checksum, FILESIZE=filesize)
+
+    with open(packagepath + "/metadata.xml", "w") as f:
+        f.write(metadata_xml)
+
+    # run iTMSUploader
+    subprocess.check_call(["/Applications/Xcode.app/Contents/Applications/Application Loader.app/Contents/MacOS/itms/bin/iTMSTransporter",
+                           "-m", "upload", "-apple_id", itunes_app_id, "-u", itunes_username, "-p", itunes_password, "-f", packagepath])
 
 
 def set_github_status(repo, sha):
@@ -91,7 +165,7 @@ def get_repo():
     assert False
 
 
-def set_build_number(plistpath):
+def load_plist(plistpath):
     if not os.path.exists(plistpath):
         output = subprocess.check_output(["find", ".", "-name", "*.plist"]).decode('utf-8')
         print(output)
@@ -100,15 +174,24 @@ def set_build_number(plistpath):
     import plistlib
     with open(plistpath, "rb") as f:
         data = plistlib.load(f)
+    return data
+
+
+def set_build_number(plistpath):
+    data = load_plist(plistpath)
     # see xcdoc://?url=developer.apple.com/library/etc/redirect/xcode/ios/602958/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
     # but basically this is the only valid format
-    # unofficially, however, sometimes a buildno is omitted.
+    # unofficially, however, sometimes a buildno (and minor) is omitted.
     import re
     match = re.match("(\d+)\.?(\d*)\.?(\d*)", data["CFBundleVersion"])
     if not match:
         raise Exception("Can't figure out CFBundleVersion.  Please file a bug at http://github.com/drewcrawford/cavejohnson and include the string %s" % data["CFBundleVersion"])
     (major, minor, build) = match.groups()
+    if minor == "":
+        minor = "0"
+
     data["CFBundleVersion"] = "%s.%s.%s" % (major, minor, os.environ["XCS_INTEGRATION_NUMBER"])
+    import plistlib
     with open(plistpath, "wb") as f:
         plistlib.dump(data, f)
 
@@ -266,6 +349,13 @@ def main_func():
     parser_hockeyapp.add_argument("--restrict-to-tag", action='append', default=None, help="Restricts the build's availibility to users with certain tags")
     parser_hockeyapp.add_argument("--resign-with-profile", default=None, help="Resign the archive with the specified provisioning profile name.")
     parser_hockeyapp.set_defaults(func=uploadHockeyApp)
+
+    parser_uploadipa = subparsers.add_parser('uploadiTunesConnect', help="Upload the IPA to iTunesConnect (e.g. new TestFlight)")
+    parser_uploadipa.add_argument("--itunes-app-id", required=True, help="iTunes app ID")
+    parser_uploadipa.add_argument("--itunes-username", required=True, help="iTunes username (technical role or better)")
+    parser_uploadipa.add_argument("--itunes-password", required=True, help="iTunes password")
+    parser_uploadipa.add_argument("--ipa-path", default=None, help="IPA path.  If unspecified, guesses based on XCS settings.")
+    parser_uploadipa.set_defaults(func=uploadITMS)
 
     args = parser.parse_args()
     args.func(args)
