@@ -12,10 +12,11 @@ CREDENTIALS_FILE = "/var/_xcsbuildd/githubcredentials"
 
 
 def reSignIPAArgs(args):
-    reSignIPA(args.ipa_path, args.new_mobileprovision_path, args.certificate_name)
+    reSignIPA(args.new_mobileprovision_path, args.certificate_name, args.out_ipa_name, args.ipa_path)
 
 
-def reSignIPA(ipa_path, new_mobileprovision_path, certificate_name):
+def reSignIPA(new_mobileprovision_path, certificate_name, out_ipa_name, ipa_path=None):
+
     import plistlib
     # extract from mobileprovision
     entitlements = subprocess.check_output(["security", "cms", "-D", "-i", new_mobileprovision_path])
@@ -59,9 +60,9 @@ def reSignIPA(ipa_path, new_mobileprovision_path, certificate_name):
                     correct_path = full_path[full_path.find("Payload"):]
                     zip.write(full_path, arcname=correct_path, compress_type=zipfile.ZIP_DEFLATED)
 
-    outfile = "/Users/drew/Downloads/out.ipa"  # todo
+    shutil.rmtree(tempdir)
 
-    zipdir(payload_path, outfile)
+    zipdir(payload_path, out_ipa_name)
 
 
 def uploadITMS(args):
@@ -124,6 +125,8 @@ def upload_itunesconnect(itunes_app_id, itunes_username, itunes_password, ipa_pa
     # run iTMSUploader
     subprocess.check_call(["/Applications/Xcode.app/Contents/Applications/Application Loader.app/Contents/MacOS/itms/bin/iTMSTransporter",
                            "-m", "upload", "-apple_id", itunes_app_id, "-u", itunes_username, "-p", itunes_password, "-f", packagepath])
+
+    shutil.rmtree(tpath)
 
 
 def set_github_status(repo, sha):
@@ -412,14 +415,14 @@ def main_func():
     parser_uploadipa.add_argument("--itunes-app-id", required=True, help="iTunes app ID")
     parser_uploadipa.add_argument("--itunes-username", required=True, help="iTunes username (technical role or better)")
     parser_uploadipa.add_argument("--itunes-password", required=True, help="iTunes password")
-    parser_uploadipa.add_argument("--ipa-path", default=None, help="IPA path.  If unspecified, guesses based on XCS settings.")
+    parser_uploadipa.add_argument("--ipa-path", default=None, help="IPA path.  If unspecified, guesses based on XCS settings.  Note that if reSignIPA is used, this should not be left blank.")
     parser_uploadipa.set_defaults(func=uploadITMS)
 
     parser_resignipa = subparsers.add_parser('reSignIPA', help="Resign IPA with given provisioning profile")
-    parser_resignipa.add_argument("--ipa-path", required=True, help="IPA path")
+    parser_resignipa.add_argument("--ipa-path", default=None, help="IPA path.  If unspecified, guesses based on XCS settings.")
     parser_resignipa.add_argument("--new-mobileprovision-path", required=True, help="Path to the mobileprovision to resign with.")
     parser_resignipa.add_argument("--certificate-name", required=True, help="Full name of the certificate to resign with (like 'iPhone Distribution: DrewCrawfordApps LLC (P5GM95Q9VV)')")
-
+    parser_resignipa.add_argument("--out-ipa-name", required=True, help="Name (path) of the resigned IPA file")
     parser_resignipa.set_defaults(func=reSignIPAArgs)
 
     args = parser.parse_args()
