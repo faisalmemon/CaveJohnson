@@ -35,8 +35,10 @@ def reSignIPA(ipa_path, new_mobileprovision_path, certificate_name):
     zip_file.extractall(tempdir)
     print("Working in", tempdir)
 
-    # todo: fix me
-    appname = "MyiOSApp.app"
+    # calculate appname
+    import re
+    not_app = list(filter(lambda x: re.match("Payload/.*.app/$", x), zip_file.namelist()))[0]  # like 'Payload/MyiOSApp.app/'
+    appname = re.match("Payload/(.*).app/$", not_app).groups()[0] + ".app"
     payload_path = tempdir + "/Payload"
 
     app_path = payload_path + "/" + appname
@@ -44,12 +46,8 @@ def reSignIPA(ipa_path, new_mobileprovision_path, certificate_name):
     import shutil
     shutil.copyfile(new_mobileprovision_path, app_path + "/embedded.mobileprovision")
 
-    # get old entitlements
-    # old_entitlements = subprocess.check_output(["codesign", "-d", "--entitlements", "-", app_path])
-    # print("Old entitlements", old_entitlements)
-
     # write entitlements to tempfile
-    with open(tempdir+"/entitlements.plist", "wb") as fp:
+    with open(tempdir + "/entitlements.plist", "wb") as fp:
         plistlib.dump(entitlements["Entitlements"], fp)
     subprocess.check_call(["codesign", "--entitlements", tempdir + "/entitlements.plist", "-f", "-s", certificate_name, app_path])
 
@@ -64,9 +62,6 @@ def reSignIPA(ipa_path, new_mobileprovision_path, certificate_name):
     outfile = "/Users/drew/Downloads/out.ipa"  # todo
 
     zipdir(payload_path, outfile)
-
-    import pdb
-    pdb.set_trace()
 
 
 def uploadITMS(args):
