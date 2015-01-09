@@ -16,6 +16,8 @@ def reSignIPAArgs(args):
 
 
 def reSignIPA(new_mobileprovision_path, certificate_name, out_ipa_name, ipa_path=None):
+    if not ipa_path:
+        ipa_path = os.environ["XCS_OUTPUT_DIR"] + "/" + os.environ["XCS_PRODUCT"]
 
     import plistlib
     # extract from mobileprovision
