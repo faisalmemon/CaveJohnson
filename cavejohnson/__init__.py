@@ -11,6 +11,10 @@ __version__ = "0.1.0"
 CREDENTIALS_FILE = "/var/_xcsbuildd/githubcredentials"
 
 
+def warning(*objs):
+    print("WARNING: ", *objs, file=sys.stderr)
+
+
 def reSignIPAArgs(args):
     reSignIPA(args.new_mobileprovision_path, args.certificate_name, args.out_ipa_name, args.ipa_path)
 
@@ -36,7 +40,7 @@ def reSignIPA(new_mobileprovision_path, certificate_name, out_ipa_name, ipa_path
     tempdir = tempfile.mkdtemp()
     zip_file = zipfile.ZipFile(ipa_path)
     zip_file.extractall(tempdir)
-    print("Working in", tempdir)
+    warning("Working in", tempdir)
 
     # calculate appname
     import re
@@ -52,9 +56,9 @@ def reSignIPA(new_mobileprovision_path, certificate_name, out_ipa_name, ipa_path
     # write entitlements to tempfile
     with open(tempdir + "/entitlements.plist", "wb") as fp:
         plistlib.dump(entitlements["Entitlements"], fp)
-    print("codesign begin")
+    warning("codesign begin")
     subprocess.check_call(["codesign", "--entitlements", tempdir + "/entitlements.plist", "-f", "-s", certificate_name, app_path])
-    print("codesign end")
+    warning("codesign end")
 
     def zipdir(path, zip_path):
         with zipfile.ZipFile(zip_path, 'w') as zip:
@@ -66,7 +70,7 @@ def reSignIPA(new_mobileprovision_path, certificate_name, out_ipa_name, ipa_path
 
     zipdir(payload_path, out_ipa_name)
     shutil.rmtree(tempdir)
-    print("done signing")
+    warning("done signing")
 
 
 def uploadITMS(args):
