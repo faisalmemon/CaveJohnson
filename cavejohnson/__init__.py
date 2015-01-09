@@ -82,6 +82,9 @@ def xcodeGUITricksArgs(args):
 
 
 def xcodeGUITricks(archive_path, new_ipa_path):
+    if not archive_path:
+        archive_path = os.environ["XCS_ARCHIVE"]
+
     import tempfile
     tempdir = tempfile.mkdtemp()
 
