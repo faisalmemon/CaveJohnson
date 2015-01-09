@@ -12,7 +12,9 @@ CREDENTIALS_FILE = "/var/_xcsbuildd/githubcredentials"
 
 
 def warning(*objs):
-    print("WARNING: ", *objs, file=sys.stderr)
+    with open("/tmp/cavejohnson.log", "a") as file:
+        file.write(" ".join(objs))
+        file.write("\n")
 
 
 def reSignIPAArgs(args):
