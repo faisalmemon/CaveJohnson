@@ -52,7 +52,9 @@ def reSignIPA(new_mobileprovision_path, certificate_name, out_ipa_name, ipa_path
     # write entitlements to tempfile
     with open(tempdir + "/entitlements.plist", "wb") as fp:
         plistlib.dump(entitlements["Entitlements"], fp)
+    print("codesign begin")
     subprocess.check_call(["codesign", "--entitlements", tempdir + "/entitlements.plist", "-f", "-s", certificate_name, app_path])
+    print("codesign end")
 
     def zipdir(path, zip_path):
         with zipfile.ZipFile(zip_path, 'w') as zip:
@@ -62,9 +64,9 @@ def reSignIPA(new_mobileprovision_path, certificate_name, out_ipa_name, ipa_path
                     correct_path = full_path[full_path.find("Payload"):]
                     zip.write(full_path, arcname=correct_path, compress_type=zipfile.ZIP_DEFLATED)
 
-    shutil.rmtree(tempdir)
-
     zipdir(payload_path, out_ipa_name)
+    shutil.rmtree(tempdir)
+    print("done signing")
 
 
 def uploadITMS(args):
