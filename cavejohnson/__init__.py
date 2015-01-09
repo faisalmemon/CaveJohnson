@@ -21,6 +21,16 @@ def reSignIPAArgs(args):
     reSignIPA(args.new_mobileprovision_path, args.certificate_name, args.out_ipa_name, args.ipa_path)
 
 
+def zipdir(path, zip_path):
+    import zipfile
+    with zipfile.ZipFile(zip_path, 'w') as zip:
+        for root, dirs, files in os.walk(path):
+            for file in files:
+                full_path = os.path.join(root, file)
+                correct_path = full_path[len(path):]
+                zip.write(full_path, arcname=correct_path, compress_type=zipfile.ZIP_DEFLATED)
+
+
 def reSignIPA(new_mobileprovision_path, certificate_name, out_ipa_name, ipa_path=None):
     if not ipa_path:
         ipa_path = os.environ["XCS_OUTPUT_DIR"] + "/" + os.environ["XCS_PRODUCT"]
@@ -62,17 +72,42 @@ def reSignIPA(new_mobileprovision_path, certificate_name, out_ipa_name, ipa_path
     subprocess.check_call(["codesign", "--entitlements", tempdir + "/entitlements.plist", "-f", "-s", certificate_name, app_path])
     warning("codesign end")
 
-    def zipdir(path, zip_path):
-        with zipfile.ZipFile(zip_path, 'w') as zip:
-            for root, dirs, files in os.walk(path):
-                for file in files:
-                    full_path = os.path.join(root, file)
-                    correct_path = full_path[full_path.find("Payload"):]
-                    zip.write(full_path, arcname=correct_path, compress_type=zipfile.ZIP_DEFLATED)
-
     zipdir(payload_path, out_ipa_name)
     shutil.rmtree(tempdir)
     warning("done signing")
+
+
+def xcodeGUITricksArgs(args):
+    xcodeGUITricks(args.archive_path, args.new_ipa_path)
+
+
+def xcodeGUITricks(archive_path, new_ipa_path):
+    import tempfile
+    tempdir = tempfile.mkdtemp()
+
+    # First we copy the payload
+    import shutil
+    # There's only 1 app, right?
+    appname = os.listdir(archive_path + "/Products/Applications")
+    assert len(appname) == 1
+    appname = appname[0]
+
+    shutil.copytree(archive_path + "/Products/Applications/", tempdir + "/Payload")
+
+    # next, we copy the swiftsupport
+    shutil.copytree(archive_path + "/SwiftSupport", tempdir + "/SwiftSupport")
+
+    # finally, we fix up the symbols
+    # we need the app binary
+    appbinary = archive_path + "/Products/Applications/" + appname + "/" + appname[:-4]  # .app, like MyAppName.app/MyAppName
+    os.mkdir(tempdir + "/Symbols")
+    # This was reverse-engineered by running a GUI export and poking in a file called IDEDistribustion.standard.log
+    subprocess.check_call(["/Applications/Xcode.app/Contents/Developer/usr/bin/symbols", "-noTextInSOD",
+                           "-noDaemon", "-arch", "all", "-symbolsPackageDir", tempdir + "/Symbols", appbinary])
+
+    # finally, let's call it a day
+    zipdir(tempdir, new_ipa_path)
+    shutil.rmtree(tempdir)
 
 
 def uploadITMS(args):
@@ -162,6 +197,16 @@ def set_github_status(repo, sha):
         raise Exception("Unknown xcs_status %s.  Please file a bug at http://github.com/drewcrawford/cavejohnson" % xcs_status)
 
     r.create_status(sha=sha, state=gh_state, target_url=get_integration_url(), description=get_botname())
+
+
+def install_mobileprovision_args(args):
+    install_mobileprovision(args.mobileprovision_path)
+
+
+def install_mobileprovision(mobileprovision_path):
+    import shutil
+    basename = os.path.basename(mobileprovision_path)
+    shutil.copyfile(mobileprovision_path, "/Library/Developer/XcodeServer/ProvisioningProfiles/" + basename)
 
 
 def github_auth():
@@ -434,6 +479,15 @@ def main_func():
     parser_resignipa.add_argument("--certificate-name", required=True, help="Full name of the certificate to resign with (like 'iPhone Distribution: DrewCrawfordApps LLC (P5GM95Q9VV)')")
     parser_resignipa.add_argument("--out-ipa-name", required=True, help="Name (path) of the resigned IPA file")
     parser_resignipa.set_defaults(func=reSignIPAArgs)
+
+    parser_installmobileprovision = subparsers.add_parser('installMobileProvision', help="Installs the provisioning profile for XCS use")
+    parser_installmobileprovision.add_argument("--provisioning-profile", required=True, help="Path to the provisioning profile.")
+    parser_installmobileprovision.set_defaults(func=install_mobileprovision)
+
+    parser_xcodeGUITricks = subparsers.add_parser('xcodeGUITricks', help="Converts Xcode Archives into IPAs in the way that the Xcode GUI does (swiftsupport + symbols)")
+    parser_xcodeGUITricks.add_argument("--archive-path", default=None, help="Path to the Xcode Archive.  If none, guesses based on XCS settings.")
+    parser_xcodeGUITricks.add_argument("--new-ipa-path", required=True, help="Path to the output IPA file")
+    parser_xcodeGUITricks.set_defaults(func=xcodeGUITricksArgs)
 
     args = parser.parse_args()
     args.func(args)
