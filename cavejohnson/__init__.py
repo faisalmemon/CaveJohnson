@@ -11,6 +11,64 @@ __version__ = "0.1.0"
 CREDENTIALS_FILE = "/var/_xcsbuildd/githubcredentials"
 
 
+def reSignIPAArgs(args):
+    reSignIPA(args.ipa_path, args.new_mobileprovision_path, args.certificate_name)
+
+
+def reSignIPA(ipa_path, new_mobileprovision_path, certificate_name):
+    import plistlib
+    # extract from mobileprovision
+    entitlements = subprocess.check_output(["security", "cms", "-D", "-i", new_mobileprovision_path])
+    entitlements = plistlib.loads(entitlements)
+
+    info_plist = load_plist_ipa(ipa_path)
+
+    if not entitlements["Entitlements"]["application-identifier"].endswith(info_plist["CFBundleIdentifier"]):
+        print("Entitlements application-identifier %s doesn't match info_plist identifier %s" % (entitlements["Entitlements"]["application-identifier"], info_plist["CFBundleIdentifier"]))
+
+    # todo: resign frameworks
+
+    import tempfile
+    import zipfile
+    tempdir = tempfile.mkdtemp()
+    zip_file = zipfile.ZipFile(ipa_path)
+    zip_file.extractall(tempdir)
+    print("Working in", tempdir)
+
+    # todo: fix me
+    appname = "MyiOSApp.app"
+    payload_path = tempdir + "/Payload"
+
+    app_path = payload_path + "/" + appname
+
+    import shutil
+    shutil.copyfile(new_mobileprovision_path, app_path + "/embedded.mobileprovision")
+
+    # get old entitlements
+    # old_entitlements = subprocess.check_output(["codesign", "-d", "--entitlements", "-", app_path])
+    # print("Old entitlements", old_entitlements)
+
+    # write entitlements to tempfile
+    with open(tempdir+"/entitlements.plist", "wb") as fp:
+        plistlib.dump(entitlements["Entitlements"], fp)
+    subprocess.check_call(["codesign", "--entitlements", tempdir + "/entitlements.plist", "-f", "-s", certificate_name, app_path])
+
+    def zipdir(path, zip_path):
+        with zipfile.ZipFile(zip_path, 'w') as zip:
+            for root, dirs, files in os.walk(path):
+                for file in files:
+                    full_path = os.path.join(root, file)
+                    correct_path = full_path[full_path.find("Payload"):]
+                    zip.write(full_path, arcname=correct_path, compress_type=zipfile.ZIP_DEFLATED)
+
+    outfile = "/Users/drew/Downloads/out.ipa"  # todo
+
+    zipdir(payload_path, outfile)
+
+    import pdb
+    pdb.set_trace()
+
+
 def uploadITMS(args):
     upload_itunesconnect(args.itunes_app_id, args.itunes_username, args.itunes_password, args.ipa_path)
 
@@ -19,20 +77,7 @@ def upload_itunesconnect(itunes_app_id, itunes_username, itunes_password, ipa_pa
     if not ipa_path:
         ipa_path = os.environ["XCS_OUTPUT_DIR"] + "/" + os.environ["XCS_PRODUCT"]
 
-    # we have to read the plist inside the IPA
-    import zipfile
-    zip_file = zipfile.ZipFile(ipa_path)
-    import re
-    # search for info plist inside IPA
-    info_plists = list(filter(lambda x: re.match("Payload/[^/]*/Info.plist", x), zip_file.namelist()))
-    assert len(info_plists) == 1
-
-    with zip_file.open(info_plists[0]) as plistfile:
-        # some hackery to read into RAM because zip_file doesn't support 'seek' as plistlib requires
-        plistdata = plistfile.read()
-
-    import plistlib
-    data = plistlib.loads(plistdata)
+    data = load_plist_ipa(ipa_path)
 
     # first, we compute a path to the IPA
     # now we get a temp path to work in
@@ -163,6 +208,24 @@ def get_repo():
         XcodeFunkyRepo = XcodeFunkyRepo[:-4]
         return XcodeFunkyRepo
     assert False
+
+
+def load_plist_ipa(ipa_path):
+    # we have to read the plist inside the IPA
+    import zipfile
+    zip_file = zipfile.ZipFile(ipa_path)
+    import re
+    # search for info plist inside IPA
+    info_plists = list(filter(lambda x: re.match("Payload/[^/]*/Info.plist", x), zip_file.namelist()))
+    assert len(info_plists) == 1
+
+    with zip_file.open(info_plists[0]) as plistfile:
+        # some hackery to read into RAM because zip_file doesn't support 'seek' as plistlib requires
+        plistdata = plistfile.read()
+
+    import plistlib
+    data = plistlib.loads(plistdata)
+    return data
 
 
 def load_plist(plistpath):
@@ -356,6 +419,13 @@ def main_func():
     parser_uploadipa.add_argument("--itunes-password", required=True, help="iTunes password")
     parser_uploadipa.add_argument("--ipa-path", default=None, help="IPA path.  If unspecified, guesses based on XCS settings.")
     parser_uploadipa.set_defaults(func=uploadITMS)
+
+    parser_resignipa = subparsers.add_parser('reSignIPA', help="Resign IPA with given provisioning profile")
+    parser_resignipa.add_argument("--ipa-path", required=True, help="IPA path")
+    parser_resignipa.add_argument("--new-mobileprovision-path", required=True, help="Path to the mobileprovision to resign with.")
+    parser_resignipa.add_argument("--certificate-name", required=True, help="Full name of the certificate to resign with (like 'iPhone Distribution: DrewCrawfordApps LLC (P5GM95Q9VV)')")
+
+    parser_resignipa.set_defaults(func=reSignIPAArgs)
 
     args = parser.parse_args()
     args.func(args)
