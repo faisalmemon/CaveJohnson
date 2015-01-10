@@ -6,7 +6,7 @@ import sys
 import subprocess
 import enum
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 
 CREDENTIALS_FILE = "/var/_xcsbuildd/githubcredentials"
 
@@ -487,10 +487,13 @@ def main_func():
     parser_installmobileprovision.add_argument("--provisioning-profile", required=True, help="Path to the provisioning profile.")
     parser_installmobileprovision.set_defaults(func=install_mobileprovision)
 
-    parser_xcodeGUITricks = subparsers.add_parser('xcodeGUITricks', help="Converts Xcode Archives into IPAs in the way that the Xcode GUI does (swiftsupport + symbols)")
+    parser_xcodeGUITricks = subparsers.add_parser('xcodeGUITricks', help="Converts Xcode Archives into IPAs in the way that the Xcode GUI does (swiftsupport + symbols).  Works around rdar://19432441 and rdar://19432725.")
     parser_xcodeGUITricks.add_argument("--archive-path", default=None, help="Path to the Xcode Archive.  If none, guesses based on XCS settings.")
     parser_xcodeGUITricks.add_argument("--new-ipa-path", required=True, help="Path to the output IPA file")
     parser_xcodeGUITricks.set_defaults(func=xcodeGUITricksArgs)
 
+    def usage(args):
+        parser.print_help()
+    parser.set_defaults(func=usage)
     args = parser.parse_args()
     args.func(args)
