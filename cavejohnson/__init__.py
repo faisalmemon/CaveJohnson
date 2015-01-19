@@ -312,7 +312,7 @@ def set_build_number(plistpath):
     data["CFBundleVersion"] = "%s.%s.%s" % (major, minor, os.environ["XCS_INTEGRATION_NUMBER"])
     import plistlib
     with open(plistpath, "wb") as f:
-        plist ib.dump(data, f)
+        plistlib.dump(data, f)
 
 
 def get_integration_url():
