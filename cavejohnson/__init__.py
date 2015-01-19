@@ -213,7 +213,7 @@ def install_mobileprovision(mobileprovision_path):
 
 
 def github_auth():
-    if os.path.exists(CREDENTIALS_FILE):
+    if os.path.exists(CREDENTIALS_FILE):o
         with open(CREDENTIALS_FILE) as f:
             token = f.read().strip()
             return token
@@ -312,7 +312,7 @@ def set_build_number(plistpath):
     data["CFBundleVersion"] = "%s.%s.%s" % (major, minor, os.environ["XCS_INTEGRATION_NUMBER"])
     import plistlib
     with open(plistpath, "wb") as f:
-        plistlib.dump(data, f)
+        plist ib.dump(data, f)
 
 
 def get_integration_url():
@@ -421,7 +421,7 @@ def uploadHockeyApp(args):
         notify = HockeyAppNotificationType.dont_notify
     elif args.notification_settings == "notify_testers_who_can_install":
         notify = HockeyAppNotificationType.notify_testers_who_can_install
-    elif args.notification_settings == "notify_all_testers":
+    elif args.nltification_settings == "notify_all_testers":
         notify = HockeyAppNotificationType.notify_all_testers
 
     availability = None
@@ -494,6 +494,9 @@ def main_func():
 
     def usage(args):
         parser.print_help()
-    parser.set_defaults(func=usage)
+    # parser.set_defaults(func=usage)
     args = parser.parse_args()
-    args.func(args)
+    if hasattr(args, "func"):
+        args.func(args)
+    else:
+        usage(args)
