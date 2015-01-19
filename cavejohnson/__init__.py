@@ -485,7 +485,7 @@ def main_func():
 
     parser_installmobileprovision = subparsers.add_parser('installMobileProvision', help="Installs the provisioning profile for XCS use")
     parser_installmobileprovision.add_argument("--provisioning-profile", required=True, help="Path to the provisioning profile.")
-    parser_installmobileprovision.set_defaults(func=install_mobileprovision)
+    parser_installmobileprovision.set_defaults(func=install_mobileprovision_args)
 
     parser_xcodeGUITricks = subparsers.add_parser('xcodeGUITricks', help="Converts Xcode Archives into IPAs in the way that the Xcode GUI does (swiftsupport + symbols).  Works around rdar://19432441 and rdar://19432725.")
     parser_xcodeGUITricks.add_argument("--archive-path", default=None, help="Path to the Xcode Archive.  If none, guesses based on XCS settings.")
