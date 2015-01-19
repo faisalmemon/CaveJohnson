@@ -177,9 +177,11 @@ def upload_itunesconnect(itunes_app_id, itunes_username, itunes_password, ipa_pa
     shutil.rmtree(tpath)
 
 
-def set_github_status(repo, sha):
-    token = github_auth()
+def set_github_status(repo, sha, token=None, integration_result=None, url=None, botname=None):
+    print("status debug", repo, sha, token, integration_result, url, botname)
     import github3
+    if not token:
+        token = github_auth()
     gh = github3.login(token=token)
     (owner, reponame) = repo.split("/")
     r = gh.repository(owner, reponame)
@@ -187,7 +189,10 @@ def set_github_status(repo, sha):
         raise Exception("Trouble getting a repository for %s and %s" % (owner, reponame))
 
     # these constants are documented on http://faq.sealedabstract.com/xcodeCI/
-    xcs_status = os.environ["XCS_INTEGRATION_RESULT"]
+    if not integration_result:
+        xcs_status = os.environ["XCS_INTEGRATION_RESULT"]
+    else:
+        xcs_status = integration_result
     if xcs_status == "unknown":
         gh_state = "pending"
     elif xcs_status == "build-errors":
@@ -198,8 +203,12 @@ def set_github_status(repo, sha):
         gh_state = "success"
     else:
         raise Exception("Unknown xcs_status %s.  Please file a bug at http://github.com/drewcrawford/cavejohnson" % xcs_status)
-
-    r.create_status(sha=sha, state=gh_state, target_url=get_integration_url(), description=get_botname())
+    if not url:
+        url = get_integration_url()
+    if not botname:
+        botname = get_botname()
+    print("status debug 2", sha, gh_state, url, botname)
+    r.create_status(sha=sha, state=gh_state, target_url=url, description=botname)
 
 
 def install_mobileprovision_args(args):
@@ -391,7 +400,11 @@ def upload_hockeyapp(token, appid, notification=None, status=None, mandatory=Non
 
 
 def setGithubStatus(args):
-    set_github_status(get_repo(), get_sha())
+    if not args.sha:
+        args.sha = get_sha()
+    if not args.repo:
+        args.repo = get_repo()
+    set_github_status(args.repo, args.sha, token=args.token, integration_result=args.integration_result, url=args.url, botname=args.bot_name)
 
 
 def getGithubRepo(args):
@@ -444,6 +457,13 @@ def main_func():
     subparsers = parser.add_subparsers(help='sub-command help')
     # create the parser for the "setGithubStatus" command
     parser_ghstatus = subparsers.add_parser('setGithubStatus', help='Sets the GitHub status to an appropriate value inside a trigger.  Best to run both before and after build.')
+    parser_ghstatus.add_argument("--token", default=None, help="GitHub token (by default, we pull it out of storage with setGithubCredentials)")
+    parser_ghstatus.add_argument("--sha", default=None, help="SHA to set status for.  By default, we work this out from XCS. See getSha for details.")
+    parser_ghstatus.add_argument("--repo", default=None, help="Repo to set status for.  By default, we work this out from XCS.  See getGithubRepo for details.")
+    parser_ghstatus.add_argument("--integration-result", default=None, help="XCS_INTEGRATION_RESULT to parse.  See http://faq.sealedabstract.com/xcodeCI/ for valid values.")
+    parser_ghstatus.add_argument("--bot-name", default=None, help="Name of bot.")
+    parser_ghstatus.add_argument("--url", default=None, help="URL for more details about this integration.")
+
     parser_ghstatus.set_defaults(func=setGithubStatus)
 
     parser_ghrepo = subparsers.add_parser('getGithubRepo', help='Detects the GitHub repo inside a trigger.')
