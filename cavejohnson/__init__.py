@@ -213,7 +213,7 @@ def install_mobileprovision(mobileprovision_path):
 
 
 def github_auth():
-    if os.path.exists(CREDENTIALS_FILE):o
+    if os.path.exists(CREDENTIALS_FILE):
         with open(CREDENTIALS_FILE) as f:
             token = f.read().strip()
             return token
