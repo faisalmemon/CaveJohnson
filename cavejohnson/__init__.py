@@ -203,7 +203,7 @@ def set_github_status(repo, sha):
 
 
 def install_mobileprovision_args(args):
-    install_mobileprovision(args.mobileprovision_path)
+    install_mobileprovision(args.provisioning_profile)
 
 
 def install_mobileprovision(mobileprovision_path):
