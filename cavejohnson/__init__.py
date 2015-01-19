@@ -6,7 +6,7 @@ import sys
 import subprocess
 import enum
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 CREDENTIALS_FILE = "/var/_xcsbuildd/githubcredentials"
 
@@ -178,7 +178,6 @@ def upload_itunesconnect(itunes_app_id, itunes_username, itunes_password, ipa_pa
 
 
 def set_github_status(repo, sha, token=None, integration_result=None, url=None, botname=None):
-    print("status debug", repo, sha, token, integration_result, url, botname)
     import github3
     if not token:
         token = github_auth()
@@ -207,7 +206,6 @@ def set_github_status(repo, sha, token=None, integration_result=None, url=None, 
         url = get_integration_url()
     if not botname:
         botname = get_botname()
-    print("status debug 2", sha, gh_state, url, botname)
     r.create_status(sha=sha, state=gh_state, target_url=url, description=botname)
 
 
