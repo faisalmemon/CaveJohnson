@@ -183,6 +183,7 @@ def set_github_status(repo, sha, token=None, integration_result=None, url=None, 
     if not token:
         token = github_auth()
     gh = github3.login(token=token)
+    repo = repo.strip("/")
     (owner, reponame) = repo.split("/")
     r = gh.repository(owner, reponame)
     if not r:
