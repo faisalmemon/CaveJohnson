@@ -5,6 +5,7 @@ import re
 import sys
 import subprocess
 import enum
+import re
 
 __version__ = "1.0.1"
 
@@ -264,8 +265,10 @@ def get_repo():
         if not match:
             raise Exception("No repo match in file.  Please file a bug at http://github.com/drewcrawford/cavejohnson and include the contents of %s" % sourceLogPath)
         XcodeFunkyRepo = match.groups()[0]  # some funky string like "github.com:drewcrawford\/DCAKit.git"
-        assert XcodeFunkyRepo[:11] == "github.com:"
-        XcodeFunkyRepo = XcodeFunkyRepo[11:]
+        githubRegex = re.compile('github.com(:)?', re.IGNORECASE)
+        match = githubRegex.search(XcodeFunkyRepo)
+        assert match
+        XcodeFunkyRepo = XcodeFunkyRepo[match.end():]
         XcodeFunkyRepo = XcodeFunkyRepo.replace("\/", "/")
         assert XcodeFunkyRepo[-4:] == ".git"
         XcodeFunkyRepo = XcodeFunkyRepo[:-4]
