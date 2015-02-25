@@ -5,7 +5,6 @@ import re
 import sys
 import subprocess
 import enum
-import re
 
 __version__ = "1.0.1"
 
