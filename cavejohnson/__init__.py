@@ -247,10 +247,15 @@ def github_auth():
 
 # rdar://17923022
 def get_sha():
-    root = os.environ["PWD"]
-    repodir = os.listdir(root)[0]
-    # /Library/Developer/XcodeServer/Integrations/Caches/6490b1f573dca4e4e0d988197ae6c225/Source/repo_name
-    repo = os.path.join(root, repodir)
+    for subdir in os.listdir('.'):
+        if is_git_directory(subdir):
+            return get_repo_sha(subdir)
+    assert False
+
+def is_git_directory(path = '.'):
+    return subprocess.call(['git', '-C', path, 'status'], stderr=subprocess.STDOUT, stdout = open(os.devnull, 'w')) == 0    
+
+def get_repo_sha(repo):
     sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=repo).decode('ascii').strip()
     return sha
 
