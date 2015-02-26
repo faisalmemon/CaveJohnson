@@ -247,9 +247,12 @@ def github_auth():
 
 # rdar://17923022
 def get_sha():
+    return get_repo_sha(get_git_directory())
+
+def get_git_directory():
     for subdir in os.listdir('.'):
         if is_git_directory(subdir):
-            return get_repo_sha(subdir)
+            return subdir
     assert False
 
 def is_git_directory(path = '.'):
@@ -270,8 +273,24 @@ def get_sha_from_log():
         return match.groups()[0]
     assert False
 
+def get_origin(repo):
+    origin = subprocess.check_output(['git', 'ls-remote', '--get-url'], cwd=repo).decode('ascii').strip()
+    return origin
 
 def get_repo():
+    origin = get_origin(get_git_directory())
+    if not origin:
+        raise Exception("Unable to find repo.  Please file a bug at http://github.com/drewcrawford/cavejohnson and include the contents of %s" % sourceLogPath)
+    githubRegex = re.compile('github.com(:)?', re.IGNORECASE)
+    match = githubRegex.search(origin)
+    assert match
+    repo = origin[match.end():]
+    repo = repo.replace("\/", "/")
+    assert repo[-4:] == ".git"
+    repo = repo[:-4]
+    return repo
+
+def get_repo_from_log():
     sourceLogPath = os.path.join(os.environ["XCS_OUTPUT_DIR"], "sourceControl.log")
     with open(sourceLogPath) as sourceFile:
         sourceLog = sourceFile.read()
