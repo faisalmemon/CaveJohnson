@@ -247,6 +247,15 @@ def github_auth():
 
 # rdar://17923022
 def get_sha():
+    root = os.environ["PWD"]
+    repodir = os.listdir(root)[0]
+    # /Library/Developer/XcodeServer/Integrations/Caches/6490b1f573dca4e4e0d988197ae6c225/Source/repo_name
+    repo = os.path.join(root, repodir)
+    sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=repo).decode('ascii').strip()
+    return sha
+
+
+def get_sha_from_log():
     sourceLogPath = os.path.join(os.environ["XCS_OUTPUT_DIR"], "sourceControl.log")
     with open(sourceLogPath) as sourceFile:
         sourceLog = sourceFile.read()
