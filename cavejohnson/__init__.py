@@ -424,6 +424,14 @@ def getGithubRepo(args):
 def getSha(args):
     print(get_sha())
 
+def setGithubAuthToken(args):
+    whoami = subprocess.check_output(["whoami"]).strip().decode("utf-8")
+    if whoami != "_xcsbuildd":
+        print("%s is not _xcsbuildd" % whoami)
+        print("Sorry, you need to call like 'sudo -u _xcsbuildd cavejohnson setGithubAuthToken --token github_auth_token'")
+        sys.exit(1)
+    with open(CREDENTIALS_FILE, "w") as f:
+        f.write(args.token)
 
 def setGithubCredentials(args):
     whoami = subprocess.check_output(["whoami"]).strip().decode("utf-8")
@@ -485,6 +493,10 @@ def main_func():
     parser_authenticate = subparsers.add_parser('setGithubCredentials', help="Sets the credentials that will be used to talk to GitHub.")
     parser_authenticate.set_defaults(func=setGithubCredentials)
 
+    parser_token = subparsers.add_parser('setGithubAuthToken', help="Sets an application access token used to communicate with GitHub. Generate this token via your application settings on github.com.")
+    parser_token.add_argument('--token', help="GitHub application access token.", required=True)
+    parser_token.set_defaults(func=setGithubAuthToken)
+
     parser_buildnumber = subparsers.add_parser('setBuildNumber', help="Sets the build number (CFBundleVersion) based on the bot integration count to building")
     parser_buildnumber.add_argument('--plist-path', help="path for the plist to edit", required=True)
     parser_buildnumber.set_defaults(func=setBuildNumber)
@@ -495,7 +507,7 @@ def main_func():
     parser_hockeyapp.add_argument("--notification-settings", choices=["dont_notify", "notify_testers_who_can_install", "notify_all_testers"], default=None)
     parser_hockeyapp.add_argument("--availability-settings", choices=["dont_allow_to_download_or_install", "allow_to_download_or_install"], default=None)
     parser_hockeyapp.add_argument("--mandatory", action='store_true', default=False, help="Makes the build mandatory (users must install)")
-    parser_hockeyapp.add_argument("--restrict-to-tag", action='append', default=None, help="Restricts the build's availibility to users with certain tags")
+    parser_hockeyapp.add_argument("--restrict-to-tag", action='append', default=None, help="Restricts the build's availability to users with certain tags")
     parser_hockeyapp.add_argument("--resign-with-profile", default=None, help="Resign the archive with the specified provisioning profile name.")
     parser_hockeyapp.set_defaults(func=uploadHockeyApp)
 
