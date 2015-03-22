@@ -77,6 +77,9 @@ This works around some [Xcode CLI bugs](http://faq.sealedabstract.com/xcodeCI/#t
 Requires Python 3
 
 ```bash
+pip3.4 install cavejohnson
+
+#or to grab development version
 pip3.4 install git+https://github.com/drewcrawford/CaveJohnson.git
 ```
 

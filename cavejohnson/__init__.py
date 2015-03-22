@@ -6,7 +6,7 @@ import sys
 import subprocess
 import enum
 
-__version__ = "1.0.1"
+__version__ = "1.1"
 
 CREDENTIALS_FILE = "/var/_xcsbuildd/githubcredentials"
 
