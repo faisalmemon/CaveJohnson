@@ -262,6 +262,8 @@ def get_repo_sha(repo):
     sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=repo).decode('ascii').strip()
     return sha
 
+def update_git_submodules(repo):
+    subprocess.call(['git', 'submodule', 'update', '--init', '--recursive'], cwd=repo)
 
 def get_sha_from_log():
     sourceLogPath = os.path.join(os.environ["XCS_OUTPUT_DIR"], "sourceControl.log")
@@ -465,6 +467,8 @@ def setGithubCredentials(args):
         sys.exit(1)
     github_auth()
 
+def updateGitSubmodules(args):
+    update_git_submodules(get_git_directory())
 
 def setBuildNumber(args):
     set_build_number(args.plist_path)
@@ -520,6 +524,9 @@ def main_func():
     parser_token = subparsers.add_parser('setGithubAuthToken', help="Sets an application access token used to communicate with GitHub. Generate this token via your application settings on github.com.")
     parser_token.add_argument('--token', help="GitHub application access token.", required=True)
     parser_token.set_defaults(func=setGithubAuthToken)
+
+    parser_updategitsubmodules = subparsers.add_parser('updateGitSubmodules', help="Update the repo's git submodules. Xcode Bots may not do so automatically.")
+    parser_updategitsubmodules.set_defaults(func=updateGitSubmodules)
 
     parser_buildnumber = subparsers.add_parser('setBuildNumber', help="Sets the build number (CFBundleVersion) based on the bot integration count to building")
     parser_buildnumber.add_argument('--plist-path', help="path for the plist to edit", required=True)
