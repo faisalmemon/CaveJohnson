@@ -66,7 +66,7 @@ Now you need a post-integration trigger:
 
 ```bash
 PATH=/Library/Frameworks/Python.framework/Versions/3.4/bin:$PATH
-cavejohnson xcodeGUITricks --new-ipa-path myapp.ipa
+cavejohnson xcodeGUITricks --new-ipa-path myapp.ipa #only required for projects that include Swift
 cavejohnson uploadiTunesConnect --itunes-app-id 12345678 --itunes-username me@me.com --itunes-password mypassword --ipa-path myapp.ipa
 ```
 
