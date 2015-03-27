@@ -340,6 +340,13 @@ def load_plist(plistpath):
         data = plistlib.load(f)
     return data
 
+def set_plist_value_for_key(plistpath, value, key):
+    data = load_plist(plistpath)
+    data[key] = value
+    print("Setting value `{}` for key `{}` in plist `{}`".format(value, key, plistpath))
+    import plistlib
+    with open(plistpath, "wb") as f:
+        plistlib.dump(data, f)
 
 def set_build_number(plistpath):
     data = load_plist(plistpath)
@@ -353,11 +360,8 @@ def set_build_number(plistpath):
     (major, minor, build) = match.groups()
     if minor == "":
         minor = "0"
-
-    data["CFBundleVersion"] = "%s.%s.%s" % (major, minor, os.environ["XCS_INTEGRATION_NUMBER"])
-    import plistlib
-    with open(plistpath, "wb") as f:
-        plistlib.dump(data, f)
+    integrationBuildVersion = "{}.{}.{}".format(major, minor, os.environ["XCS_INTEGRATION_NUMBER"])    
+    set_plist_value_for_key(plistpath, integrationBuildVersion, "CFBundleVersion")
 
 
 def get_integration_url():
@@ -473,6 +477,8 @@ def updateGitSubmodules(args):
 def setBuildNumber(args):
     set_build_number(args.plist_path)
 
+def setPlistValueForKey(args):
+    set_plist_value_for_key(args.plist_path, args.value, args.key)
 
 def uploadHockeyApp(args):
     notify = None
@@ -531,6 +537,12 @@ def main_func():
     parser_buildnumber = subparsers.add_parser('setBuildNumber', help="Sets the build number (CFBundleVersion) based on the bot integration count to building")
     parser_buildnumber.add_argument('--plist-path', help="path for the plist to edit", required=True)
     parser_buildnumber.set_defaults(func=setBuildNumber)
+
+    parser_plistvaluekey = subparsers.add_parser('setPlistValueForKey', help="Sets a value in the given plist.")
+    parser_plistvaluekey.add_argument('--plist-path', help="path for the plist to edit", required=True)
+    parser_plistvaluekey.add_argument('--value', help="value to be added to the plist", required=True)
+    parser_plistvaluekey.add_argument('--key', help="plist key under which to add the value", required=True)
+    parser_plistvaluekey.set_defaults(func=setPlistValueForKey)
 
     parser_hockeyapp = subparsers.add_parser('uploadHockeyApp', help="Uploads an app to HockeyApp")
     parser_hockeyapp.add_argument("--token", required=True, help="Hockeyapp token")
