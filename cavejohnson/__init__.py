@@ -534,7 +534,7 @@ def main_func():
     parser_token.add_argument('--token', help="GitHub application access token.", required=True)
     parser_token.set_defaults(func=setGithubAuthToken)
 
-    parser_updategitsubmodules = subparsers.add_parser('updateGitSubmodules', help="Update the repo's git submodules. Xcode Bots may not do so automatically.")
+    parser_updategitsubmodules = subparsers.add_parser('updateGitSubmodules', help="Update the repo's git submodules. Xcode Bots may not do so automatically.\nIf you use this feature, please help us!  Visit https://github.com/drewcrawford/CaveJohnson/issues/14 for details.")
     parser_updategitsubmodules.set_defaults(func=updateGitSubmodules)
 
     parser_buildnumber = subparsers.add_parser('setBuildNumber', help="Sets the build number (CFBundleVersion) based on the bot integration count to building")
