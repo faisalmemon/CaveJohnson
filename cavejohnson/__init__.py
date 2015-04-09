@@ -177,7 +177,7 @@ def upload_itunesconnect(itunes_app_id, itunes_username, itunes_password, ipa_pa
     shutil.rmtree(tpath)
 
 
-def set_github_status(repo, sha, token=None, integration_result=None, url=None, botname=None):
+def set_github_status(repo, sha, token=None, integration_result=None, url=None, botname=None, verbosity=0):
     import github3
     if not token:
         token = github_auth()
@@ -207,7 +207,8 @@ def set_github_status(repo, sha, token=None, integration_result=None, url=None, 
         url = get_integration_url()
     if not botname:
         botname = get_botname()
-    print("Setting GitHub status: `{}` for Xcode status: `{}` for commit: `{}`".format(gh_state, xcs_status, sha))
+    if verbosity >= 1:
+        print("Setting GitHub status: `{}` for Xcode status: `{}` for commit: `{}`".format(gh_state, xcs_status, sha))
     r.create_status(sha=sha, state=gh_state, target_url=url, description=botname)
 
 
@@ -445,7 +446,7 @@ def setGithubStatus(args):
         args.sha = get_sha()
     if not args.repo:
         args.repo = get_repo()
-    set_github_status(args.repo, args.sha, token=args.token, integration_result=args.integration_result, url=args.url, botname=args.bot_name)
+    set_github_status(args.repo, args.sha, token=args.token, integration_result=args.integration_result, url=args.url, botname=args.bot_name, verbosity=args.verbose)
 
 
 def getGithubRepo(args):
@@ -516,6 +517,7 @@ def main_func():
     parser_ghstatus.add_argument("--integration-result", default=None, help="XCS_INTEGRATION_RESULT to parse.  See http://faq.sealedabstract.com/xcodeCI/ for valid values.")
     parser_ghstatus.add_argument("--bot-name", default=None, help="Name of bot.")
     parser_ghstatus.add_argument("--url", default=None, help="URL for more details about this integration.")
+    parser_ghstatus.add_argument("--verbose", '-v', action='count')
 
     parser_ghstatus.set_defaults(func=setGithubStatus)
 
