@@ -207,6 +207,7 @@ def set_github_status(repo, sha, token=None, integration_result=None, url=None, 
         url = get_integration_url()
     if not botname:
         botname = get_botname()
+    print("Setting GitHub status: `{}` for Xcode status: `{}` for commit: `{}`".format(gh_state, xcs_status, sha))
     r.create_status(sha=sha, state=gh_state, target_url=url, description=botname)
 
 
