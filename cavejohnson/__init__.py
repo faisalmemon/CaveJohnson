@@ -6,7 +6,7 @@ import sys
 import subprocess
 import enum
 
-__version__ = "1.1"
+__version__ = "1.2"
 
 CREDENTIALS_FILE = "/var/_xcsbuildd/githubcredentials"
 
@@ -171,7 +171,7 @@ def upload_itunesconnect(itunes_app_id, itunes_username, itunes_password, ipa_pa
         f.write(metadata_xml)
 
     # run iTMSUploader
-    subprocess.check_call(["/Applications/Xcode.app/Contents/Applications/Application Loader.app/Contents/MacOS/itms/bin/iTMSTransporter",
+    subprocess.check_call(["/Applications/Xcode.app/Contents/Applications/Application Loader.app/Contents/itms/share/iTMSTransporter.woa/iTMSTransporter",
                            "-m", "upload", "-apple_id", itunes_app_id, "-u", itunes_username, "-p", itunes_password, "-f", packagepath])
 
     shutil.rmtree(tpath)
