@@ -529,7 +529,7 @@ def main_func():
     parser_ghstatus.add_argument("--integration-result", default=None, help="XCS_INTEGRATION_RESULT to parse.  See http://faq.sealedabstract.com/xcodeCI/ for valid values.")
     parser_ghstatus.add_argument("--bot-name", default=None, help="Name of bot.")
     parser_ghstatus.add_argument("--url", default=None, help="URL for more details about this integration.")
-    parser_ghstatus.add_argument("--verbose", '-v', action='count')
+    parser_ghstatus.add_argument("--verbose", '-v', action='count', default=0)
 
     parser_ghstatus.set_defaults(func=setGithubStatus)
 
