@@ -197,6 +197,8 @@ def set_github_status(repo, sha, token=None, integration_result=None, url=None, 
         gh_state = "pending"
     elif xcs_status == "build-errors":
         gh_state = "error"
+    elif xcs_status == "trigger-error":
+        gh_state = "error"
     elif xcs_status == "test-failures" or xcs_status == "warnings" or xcs_status == "analyzer-warnings" or xcs_status == "test-failures":
         gh_state = "failure"
     elif xcs_status == "succeeded":
