@@ -367,7 +367,10 @@ def set_build_number(plistpath):
 
 
 def get_integration_url():
-    return "https://" + subprocess.check_output(["hostname"]).decode('utf-8').strip() + "/xcode/bots/" + os.environ["XCS_BOT_TINY_ID"] + "/integrations"
+    hostname = subprocess.check_output(["hostname"]).decode('utf-8').strip()
+    if hostname.endswith(".private"):
+        raise Exception("The hostname %s is invalid and GitHub won't accept it." % hostname)
+    return "https://" + hostname + "/xcode/bots/" + os.environ["XCS_BOT_TINY_ID"] + "/integrations"
 
 
 def get_botname():
