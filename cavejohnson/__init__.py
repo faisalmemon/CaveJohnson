@@ -476,6 +476,9 @@ def setGithubCredentials(args):
 def updateGitSubmodules(args):
     update_git_submodules(get_git_directory())
 
+def getIntegrationURL(args):
+    print(get_integration_url())
+
 def setBuildNumber(args):
     set_build_number(args.plist_path)
 
@@ -509,6 +512,10 @@ def main_func():
     import argparse
     parser = argparse.ArgumentParser(prog='CaveJohnson')
     subparsers = parser.add_subparsers(help='sub-command help')
+
+    parser_geturl = subparsers.add_parser('getIntegrationURL', help='Gets the integration URL for the XCS server')
+    parser_geturl.set_defaults(func=getIntegrationURL)
+
     # create the parser for the "setGithubStatus" command
     parser_ghstatus = subparsers.add_parser('setGithubStatus', help='Sets the GitHub status to an appropriate value inside a trigger.  Best to run both before and after build.')
     parser_ghstatus.add_argument("--token", default=None, help="GitHub token (by default, we pull it out of storage with setGithubCredentials)")
