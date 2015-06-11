@@ -209,7 +209,7 @@ def set_github_status(repo, sha, token=None, integration_result=None, url=None, 
         botname = get_botname()
     if verbosity >= 1:
         print("Setting GitHub status: `{}` for Xcode status: `{}` for commit: `{}`".format(gh_state, xcs_status, sha))
-    r.create_status(sha=sha, state=gh_state, target_url=url, description=botname)
+    r.create_status(sha=sha, state=gh_state, target_url=url, description=botname, context="CaveJohnson")
 
 
 def install_mobileprovision_args(args):
