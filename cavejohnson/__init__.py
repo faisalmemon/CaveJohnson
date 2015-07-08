@@ -105,8 +105,10 @@ def xcodeGUITricks(archive_path, new_ipa_path):
     appbinary = archive_path + "/Products/Applications/" + appname + "/" + appname[:-4]  # .app, like MyAppName.app/MyAppName
     os.mkdir(tempdir + "/Symbols")
     # This was reverse-engineered by running a GUI export and poking in a file called IDEDistribustion.standard.log
-    subprocess.check_call(["/Applications/Xcode.app/Contents/Developer/usr/bin/symbols", "-noTextInSOD",
-                           "-noDaemon", "-arch", "all", "-symbolsPackageDir", tempdir + "/Symbols", appbinary])
+    # Retrieve Xcode path from Xcode-select. Usefull when you have severall Xcode installations
+    xcode_path = subprocess.check_output('xcode-select -p', shell=True).decode('ascii').strip()
+    symbols_path = xcode_path + "usr/bin/symbols"
+    subprocess.check_call([symbols_path, "-noTextInSOD", "-noDaemon", "-arch", "all", "-symbolsPackageDir", tempdir + "/Symbols", appbinary])
 
     # finally, let's call it a day
     zipdir(tempdir, new_ipa_path)
