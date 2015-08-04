@@ -498,7 +498,7 @@ def uploadHockeyApp(args):
         notify = HockeyAppNotificationType.dont_notify
     elif args.notification_settings == "notify_testers_who_can_install":
         notify = HockeyAppNotificationType.notify_testers_who_can_install
-    elif args.nltification_settings == "notify_all_testers":
+    elif args.notification_settings == "notify_all_testers":
         notify = HockeyAppNotificationType.notify_all_testers
 
     availability = None
