@@ -105,8 +105,10 @@ def xcodeGUITricks(archive_path, new_ipa_path):
     appbinary = archive_path + "/Products/Applications/" + appname + "/" + appname[:-4]  # .app, like MyAppName.app/MyAppName
     os.mkdir(tempdir + "/Symbols")
     # This was reverse-engineered by running a GUI export and poking in a file called IDEDistribustion.standard.log
-    subprocess.check_call(["/Applications/Xcode.app/Contents/Developer/usr/bin/symbols", "-noTextInSOD",
-                           "-noDaemon", "-arch", "all", "-symbolsPackageDir", tempdir + "/Symbols", appbinary])
+    # Retrieve Xcode path from Xcode-select. Usefull when you have severall Xcode installations
+    xcode_path = subprocess.check_output('xcode-select -p', shell=True).decode('ascii').strip()
+    symbols_path = xcode_path + "usr/bin/symbols"
+    subprocess.check_call([symbols_path, "-noTextInSOD", "-noDaemon", "-arch", "all", "-symbolsPackageDir", tempdir + "/Symbols", appbinary])
 
     # finally, let's call it a day
     zipdir(tempdir, new_ipa_path)
@@ -197,6 +199,8 @@ def set_github_status(repo, sha, token=None, integration_result=None, url=None, 
         gh_state = "pending"
     elif xcs_status == "build-errors":
         gh_state = "error"
+    elif xcs_status == "trigger-error":
+        gh_state = "error"
     elif xcs_status == "test-failures" or xcs_status == "warnings" or xcs_status == "analyzer-warnings" or xcs_status == "test-failures":
         gh_state = "failure"
     elif xcs_status == "succeeded":
@@ -209,7 +213,7 @@ def set_github_status(repo, sha, token=None, integration_result=None, url=None, 
         botname = get_botname()
     if verbosity >= 1:
         print("Setting GitHub status: `{}` for Xcode status: `{}` for commit: `{}`".format(gh_state, xcs_status, sha))
-    r.create_status(sha=sha, state=gh_state, target_url=url, description=botname)
+    r.create_status(sha=sha, state=gh_state, target_url=url, description=botname, context="CaveJohnson")
 
 
 def install_mobileprovision_args(args):
@@ -367,7 +371,10 @@ def set_build_number(plistpath):
 
 
 def get_integration_url():
-    return "https://" + subprocess.check_output(["hostname"]).decode('utf-8').strip() + "/xcode/bots/" + os.environ["XCS_BOT_TINY_ID"] + "/integrations"
+    hostname = subprocess.check_output(["hostname"]).decode('utf-8').strip()
+    if hostname.endswith(".private"):
+        raise Exception("The hostname %s is invalid" % hostname)
+    return "https://" + hostname + "/xcode/bots/" + os.environ["XCS_BOT_TINY_ID"] + "/integrations"
 
 
 def get_botname():
@@ -491,7 +498,7 @@ def uploadHockeyApp(args):
         notify = HockeyAppNotificationType.dont_notify
     elif args.notification_settings == "notify_testers_who_can_install":
         notify = HockeyAppNotificationType.notify_testers_who_can_install
-    elif args.nltification_settings == "notify_all_testers":
+    elif args.notification_settings == "notify_all_testers":
         notify = HockeyAppNotificationType.notify_all_testers
 
     availability = None
@@ -524,7 +531,7 @@ def main_func():
     parser_ghstatus.add_argument("--integration-result", default=None, help="XCS_INTEGRATION_RESULT to parse.  See http://faq.sealedabstract.com/xcodeCI/ for valid values.")
     parser_ghstatus.add_argument("--bot-name", default=None, help="Name of bot.")
     parser_ghstatus.add_argument("--url", default=None, help="URL for more details about this integration.")
-    parser_ghstatus.add_argument("--verbose", '-v', action='count')
+    parser_ghstatus.add_argument("--verbose", '-v', action='count', default=0)
 
     parser_ghstatus.set_defaults(func=setGithubStatus)
 
