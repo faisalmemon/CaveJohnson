@@ -1,3 +1,7 @@
+# The road to 2.0
+
+This repo is for CaveJohnson 1.0.  If you wanted 2.x, [click here](https://code.sealedabstract.com/drewcrawford/CaveJohnson2).
+
 CaveJohnson is a program to teach XCode6 Server new tricks.  It's a set of commands that perform various commonly-used tasks in a continuous build system.  While designed primarily for use inside an XCS trigger script, many of the commands are useful to other build systems (Jenkins, TeamCity, etc.) because the author is unusually good at reverse-engineering and duplicating weird Xcode behavior.
 
 In true Unix style, these commands can all be used separately:
