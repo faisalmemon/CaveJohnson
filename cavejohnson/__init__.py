@@ -100,6 +100,9 @@ def xcodeGUITricks(archive_path, new_ipa_path):
     # next, we copy the swiftsupport
     shutil.copytree(archive_path + "/SwiftSupport", tempdir + "/SwiftSupport")
 
+    # next, we copy the watchkit support
+    shutil.copytree(archive_path + "/WatchKitSupport", tempdir + "/WatchKitSupport")
+
     # finally, we fix up the symbols
     # we need the app binary
     appbinary = archive_path + "/Products/Applications/" + appname + "/" + appname[:-4]  # .app, like MyAppName.app/MyAppName
@@ -107,7 +110,7 @@ def xcodeGUITricks(archive_path, new_ipa_path):
     # This was reverse-engineered by running a GUI export and poking in a file called IDEDistribustion.standard.log
     # Retrieve Xcode path from Xcode-select. Usefull when you have severall Xcode installations
     xcode_path = subprocess.check_output('xcode-select -p', shell=True).decode('ascii').strip()
-    symbols_path = xcode_path + "usr/bin/symbols"
+    symbols_path = xcode_path + "/usr/bin/symbols"
     subprocess.check_call([symbols_path, "-noTextInSOD", "-noDaemon", "-arch", "all", "-symbolsPackageDir", tempdir + "/Symbols", appbinary])
 
     # finally, let's call it a day
